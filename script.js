@@ -21,8 +21,8 @@ class Enemy {
         console.log(player.name + " is dead");
       }
     } else {
-      alert(`${this.name} escaped`);
-      console.log(`${this.name} escaped`);
+      alert(`${player.name} escaped`);
+      console.log(`${player.name} escaped`);
     }
   }
 }
@@ -56,80 +56,97 @@ class Player {
 
 // initializing instance variables
 
-let enemy1 = new Enemy("enemy1");
-let enemy2 = new Enemy("enemy2");
-let enemy3 = new Enemy("enemy3");
-let enemy4 = new Enemy("enemy4");
-let enemy5 = new Enemy("enemy5");
-let enemy6 = new Enemy("enemy6");
-let player1 = new Player();
+// Setting value of mainPlayer variable to player parameter
+let mainPlayer = new Player();
 
 //Building an Array for enemies
-let enemies = [enemy1, enemy2, enemy3, enemy4, enemy5, enemy6];
+let enemies = [
+  new Enemy("enemy1"),
+  new Enemy("enemy2"), 
+  new Enemy("enemy3"), 
+  new Enemy("enemy4"), 
+  new Enemy("enemy5"), 
+  new Enemy("enemy6")
+];
 
-//Declare variables
-let mainPlayer;
-let enemy;
+let mainEnemy = findNextAliveEnemy(enemies);
 
-updatePlayerStatus(player1); 
+updatePlayerStatusInDom(mainPlayer);
+updateEnemyStatusInDom(mainEnemy);
+
+
+let startBattleButton = document.getElementById("button");
+startBattleButton.addEventListener("click", (event) => {
+  startBattle();
+})
 
 //The function was creating for the battle
-function startBattle(player, enemies) {
-  // Setting value of mainPlayer variable to player parameter
-  mainPlayer = player;
-  //While loop for the battle (checking if/while player is alive)
-  while (player.isAlive) {
-    enemy = enemies.find((enemy) => enemy.isAlive); // Searching array of enimies for enemies that still return true for "isAlive"
-    if (!enemy) {
-      // Checks if no enemies are return isAlive === true
+function startBattle() {
+  console.log(`You're battling ${mainEnemy.name}`);
+  alert(`You're battling ${mainEnemy.name}`);
+  mainPlayer.attackEnemy(mainEnemy);
+  updateEnemyStatusInDom(mainEnemy);
+  //Check if/While nemy is living...
+  if (mainEnemy.isAlive) {
+    // The enemy survived the attack
+    console.log(`${mainEnemy.name} survived the attack! Prepare for the counter attack!`);
+    alert(`${mainEnemy.name} survived the attack! Prepare for the counter attack!`);
 
+    // The enemy attacks the main player
+    mainEnemy.attackPlayer(mainPlayer);
+    updatePlayerStatusInDom(mainPlayer);
+    startBattleButton.innerText = "Next Turn"
+  } else {
+    // Get next enemy
+    let newEnemy = findNextAliveEnemy(enemies);
+
+    // No new enemy found
+    if (!newEnemy) {
       console.log("All enemies are DEAD! You WIN");
       alert("All enemies are DEAD! You WIN");
-
-      break;
+      startBattleButton.innerText = "YOU WON";
+      startBattleButton.disabled = true;
+      return;
     }
-    console.log(`You're battling ${enemy.name}`);
-    alert(`You're battling ${enemy.name}`);
-    player1.attackEnemy(enemy);
 
-    if (enemy.isAlive) {
-      //Check if/While nemy is living...
-      enemy.attackPlayer(player); // Continue the attack on the player
-      console.log(player1.hull)
-      updatePlayerStatus(player1); 
+    // Declaring "retreat" variable and settings it's value to a prompt message
+    let retreat = prompt(
+      `${mainEnemy.name} is dead, but a new enemy lies ahead!! Would you like to retreat? (Yes or No)`
+    );
 
+    // Condition that sets when game is over if "yes" is entered into the promot. Otherwise, battle continues.
+    if (retreat.toLowerCase() === "yes") {
+      console.log("GAME OVER!");
+      alert("GAME OVER!");
+      startBattleButton.innerText = "GAME OVER"
+      startBattleButton.disabled = true;
+      return; // Ends game
     } else {
-      // Declaring "retreat" variable and settings it's value to a prompt message
-      let newEnemy = enemies.find((enemy) => enemy.isAlive); // Searching array of enimies for enemies that still return true for "isAlive"
-      if (newEnemy) {
-        let retreat = prompt(
-          `${enemy.name} is dead, would you like to retreat? (Yes or No)`
-        );
-
-        if (retreat.toLowerCase() === "yes") {
-          // Condition that sets when game is over if "yes" is entered into the promot. Otherwise, battle continues.
-          console.log("GAME OVER!");
-          alert("GAME OVER!");
-          break; // Ends game
-        }
-      }
+      mainEnemy = newEnemy;
+      startBattleButton.innerText = "Next Turn"
+      updatePlayerStatusInDom(mainPlayer);
+      updateEnemyStatusInDom(mainEnemy);
     }
   }
 }
 
-// 3 seconds delay before the battle starts.
-setTimeout(() => {
-  let startMessage = window.confirm("The game is about to start..");
-  if (startMessage) {
-    startBattle(player1, enemies);
-  }
-}, "3000");
-
-function updatePlayerStatus (player) {
+function updatePlayerStatusInDom(player) {
   const playerDiv = document.getElementById("playerStats")
   playerDiv.innerHTML = `
   Hull : ${player.hull}  <br>
   FirePower : ${player.firepower} <br>
   Accuracy : ${player.accuracy} <br>`
-  
+}
+
+function updateEnemyStatusInDom(enemy) {
+  const enemyDiv = document.getElementById("enemyStats")
+  enemyDiv.innerHTML = `
+  Hull : ${enemy.hull}  <br>
+  FirePower : ${enemy.firepower} <br>
+  Accuracy : ${enemy.accuracy} <br>`
+}
+
+function findNextAliveEnemy(enemies) {
+  // Searching array of enemies for enemies that still return true for "isAlive"
+  return enemies.find((enemy) => enemy.isAlive); 
 }
